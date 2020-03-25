@@ -54,11 +54,11 @@ func (client *Client) Login(token string) int {
 
 	client.WebSocket = gowebsocket.New(InitData.URL)
 	client.WebSocket.OnConnected = func(socket gowebsocket.Socket) {
-		onReadyWebsocketConnection(socket, client)
+		onReadySocketEvent(socket, client)
 	}
 
 	client.WebSocket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
-		fmt.Println(message)
+		onTextMessageSocketEvent(message, socket, client)
 	}
 
 	client.WebSocket.Connect()
@@ -84,6 +84,10 @@ type GatewaySessionStartLimit struct {
 	ResetAfter int `json:"reset_after"`
 }
 
-func onReadyWebsocketConnection(socket gowebsocket.Socket, client *Client) {
+func onReadySocketEvent(socket gowebsocket.Socket, client *Client) {
 	fmt.Println("WebSocket connection established.")
+}
+
+func onTextMessageSocketEvent(text string, socket gowebsocket.Socket, client *Client) {
+	fmt.Println("Received: " + text)
 }
