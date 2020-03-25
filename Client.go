@@ -34,6 +34,7 @@ type Client struct {
 	LastHeartbeatSent  int64
 	LastAckHeartbeat   int64
 	LastSequenceNumber int
+	HeartbeatInterval  chan bool
 }
 
 // Login is where the websocket methods always begin.

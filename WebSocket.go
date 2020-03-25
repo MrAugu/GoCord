@@ -80,7 +80,7 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 		fmt.Println("Setting heartbeat interval at", interval, "ms.")
 	}
 
-	SetInterval(func() {
+	var channel chan bool = SetInterval(func() {
 		var payload string
 		packet := HeartbeatPacket{Op: 1, Seq: client.LastSequenceNumber}
 		rawPayload, err := json.Marshal(packet)
@@ -94,6 +94,20 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 		socket.SendText(payload)
 		client.LastHeartbeatSent = int64(time.Now().Unix())
 	}, interval, true)
+
+	client.HeartbeatInterval = channel
+
+	var intervalChan chan bool
+	intervalChan = SetInterval(func() {
+		if client.LastHeartbeatSent-client.LastAckHeartbeat > 5000 {
+			if client.Debug == true {
+				fmt.Println("Last heartbeat acknowledged was over 5 seconds ago. Closing...")
+			}
+			socket.Close()
+			close(client.HeartbeatInterval)
+			close(intervalChan)
+		}
+	}, interval+10000, true)
 }
 
 // HeartbeatPacket helps with serialization of the heartbeat packet.
