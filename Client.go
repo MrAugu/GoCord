@@ -21,13 +21,15 @@ type ClientUser struct {
 type Client struct {
 	User       ClientUser
 	HTTPClient *http.Client
-	WebSocket  gowebsocket.Socket
+	Ws         gowebsocket.Socket
 	Users      map[string]User
 	Guilds     map[string]Guild
 	Channel    map[string]GuildChannel
 	URL        map[string]string
 	APIVersion string
 	Token      string
+	Ready      bool
+	Connected  bool
 }
 
 // Login is where the websocket methods always begin.

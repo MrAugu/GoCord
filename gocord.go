@@ -12,5 +12,7 @@ func SpawnClient() Client {
 	}
 	initializedClient.APIVersion = "6"
 	initializedClient.URL = urlMap
+	initializedClient.Ready = false
+	initializedClient.Connected = false
 	return initializedClient
 }
