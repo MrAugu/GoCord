@@ -3,7 +3,7 @@ package gocord
 import "net/http"
 
 // SpawnClient returns a freshly initialized empty client.
-func SpawnClient() Client {
+func SpawnClient(debug bool) Client {
 	var initializedClient Client = Client{HTTPClient: &http.Client{}}
 	var urlMap map[string]string = map[string]string{
 		"base":   "https://discordapp.com/api",
@@ -14,5 +14,7 @@ func SpawnClient() Client {
 	initializedClient.URL = urlMap
 	initializedClient.Ready = false
 	initializedClient.Connected = false
+	initializedClient.Debug = debug
+
 	return initializedClient
 }

@@ -30,13 +30,19 @@ type Client struct {
 	Token      string
 	Ready      bool
 	Connected  bool
+	Debug      bool
 }
 
 // Login is where the websocket methods always begin.
 func (client *Client) Login(Token string) {
+	client.Token = Token
 	request, requestError := http.NewRequest("GET", client.URL["base"]+"/v"+client.APIVersion+"/gateway/bot", nil)
 	if requestError != nil {
 		fmt.Println("Request Error on '/gateway/bot': " + requestError.Error())
+	}
+
+	if client.Debug == true {
+		fmt.Println("Sending request to /gateway/bot to grab initialization data.")
 	}
 
 	request.Header.Add("Authorization", "Bot "+client.Token)
@@ -52,9 +58,16 @@ func (client *Client) Login(Token string) {
 	}
 
 	var Response GatewayResponse
-
 	json.Unmarshal([]byte(string(body)), &Response)
-	fmt.Println("Starting a connection...")
+
+	if client.Debug == true {
+		fmt.Println("URL:", Response.URL)
+		fmt.Println("Shards:", Response.Shards)
+		fmt.Println("Remaining Session Limit:", Response.SessionLimit.Remaining)
+		fmt.Println("Preparing to connect to the gateway...")
+	}
+
+	StartConnection(Response, client)
 }
 
 // GatewayResponse holds the /gateway/bot response data.
