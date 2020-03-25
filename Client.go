@@ -31,8 +31,8 @@ type Client struct {
 	Ready              bool
 	Connected          bool
 	Debug              bool
-	LastHeartbeatSent  int
-	LastAckHeartbeat   int
+	LastHeartbeatSent  int64
+	LastAckHeartbeat   int64
 	LastSequenceNumber int
 }
 

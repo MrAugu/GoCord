@@ -3,6 +3,7 @@ package gocord
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/sacOO7/gowebsocket"
 )
@@ -54,13 +55,13 @@ func disconnected(err error, socket gowebsocket.Socket, client *Client) {
 func event(message string, socket gowebsocket.Socket, client *Client) {
 	var payload WebSocketPayload
 	json.Unmarshal([]byte(message), &payload)
-	fmt.Println(payload.SequenceNumber)
-	if payload.SequenceNumber != 0 {
-		client.LastSequenceNumber = payload.SequenceNumber
-	}
 
 	if payload.Op == 10 {
 		initializeHeartbeat(payload.Data.HeartbeatInterval, client, socket)
+	}
+
+	if payload.Op == 11 {
+		client.LastAckHeartbeat = int64(time.Now().Unix())
 	}
 }
 
@@ -76,8 +77,7 @@ type WebSocketPayload struct {
 
 func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket) {
 	if client.Debug == true {
-		fmt.Print("Setting heartbeat interval at ", interval)
-		fmt.Print("ms.")
+		fmt.Println("Setting heartbeat interval at", interval, "ms.")
 	}
 
 	SetInterval(func() {
@@ -88,10 +88,11 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 			fmt.Println(err)
 		}
 		payload = string(rawPayload)
-		fmt.Println(payload)
 		if client.Debug == true {
-			fmt.Print("Sending a heartbeat.")
+			fmt.Println("Sending a heartbeat.")
 		}
+		socket.SendText(payload)
+		client.LastHeartbeatSent = int64(time.Now().Unix())
 	}, interval, true)
 }
 
