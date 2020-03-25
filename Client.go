@@ -19,18 +19,21 @@ type ClientUser struct {
 // Client - Client is the core class, starting point of any bot.
 // Embeds {ClientUser}
 type Client struct {
-	User       ClientUser
-	HTTPClient *http.Client
-	Ws         gowebsocket.Socket
-	Users      map[string]User
-	Guilds     map[string]Guild
-	Channel    map[string]GuildChannel
-	URL        map[string]string
-	APIVersion string
-	Token      string
-	Ready      bool
-	Connected  bool
-	Debug      bool
+	User               ClientUser
+	HTTPClient         *http.Client
+	Ws                 gowebsocket.Socket
+	Users              map[string]User
+	Guilds             map[string]Guild
+	Channel            map[string]GuildChannel
+	URL                map[string]string
+	APIVersion         string
+	Token              string
+	Ready              bool
+	Connected          bool
+	Debug              bool
+	LastHeartbeatSent  int
+	LastAckHeartbeat   int
+	LastSequenceNumber int
 }
 
 // Login is where the websocket methods always begin.

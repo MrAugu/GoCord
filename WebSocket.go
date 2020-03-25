@@ -1,6 +1,7 @@
 package gocord
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/sacOO7/gowebsocket"
@@ -51,14 +52,51 @@ func disconnected(err error, socket gowebsocket.Socket, client *Client) {
 }
 
 func event(message string, socket gowebsocket.Socket, client *Client) {
+	var payload WebSocketPayload
+	json.Unmarshal([]byte(message), &payload)
+	fmt.Println(payload.SequenceNumber)
+	if payload.SequenceNumber != 0 {
+		client.LastSequenceNumber = payload.SequenceNumber
+	}
 
+	if payload.Op == 10 {
+		initializeHeartbeat(payload.Data.HeartbeatInterval, client, socket)
+	}
 }
 
 // WebSocketPayload helps deserialize json websocket events.
 type WebSocketPayload struct {
 	Op   int `json:"op"`
 	Data struct {
+		HeartbeatInterval int `json:"heartbeat_interval"`
 	} `json:"d"`
 	SequenceNumber int `json:"s"`
 	EventName      int `json:"t"`
+}
+
+func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket) {
+	if client.Debug == true {
+		fmt.Print("Setting heartbeat interval at ", interval)
+		fmt.Print("ms.")
+	}
+
+	SetInterval(func() {
+		var payload string
+		packet := HeartbeatPacket{Op: 1, Seq: client.LastSequenceNumber}
+		rawPayload, err := json.Marshal(packet)
+		if err != nil {
+			fmt.Println(err)
+		}
+		payload = string(rawPayload)
+		fmt.Println(payload)
+		if client.Debug == true {
+			fmt.Print("Sending a heartbeat.")
+		}
+	}, interval, true)
+}
+
+// HeartbeatPacket helps with serialization of the heartbeat packet.
+type HeartbeatPacket struct {
+	Op  int `json:"op"`
+	Seq int `json:"d"`
 }
