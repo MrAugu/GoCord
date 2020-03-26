@@ -18,5 +18,13 @@ func SpawnClient(debug func(text string)) Client {
 	initializedClient.Connected = false
 	initializedClient.Debug = debug
 
+	userMap := make(map[string]User)
+	guildMap := make(map[string]Guild)
+	channelMap := make(map[string]GuildChannel)
+
+	initializedClient.Users = userMap
+	initializedClient.Guilds = guildMap
+	initializedClient.Channels = channelMap
+
 	return initializedClient
 }
