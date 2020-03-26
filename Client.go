@@ -9,11 +9,17 @@ import (
 	"github.com/sacOO7/gowebsocket"
 )
 
-// ClientUser - Embeds {User} and holds client's user data.
+// ClientUser holds the data of the user of the client.
 type ClientUser struct {
-	User
-	Verified   bool
-	MfaEnabled bool
+	Avatar        string `json:"avatar"`
+	Bot           bool   `json:"bot"`
+	Discriminator string `json:"discriminator"`
+	ID            string `json:"id"`
+	Locale        string `json:"locale"`
+	System        bool   `json:"system"`
+	Username      string `json:"username"`
+	MfaEnabled    bool   `json:"mfa_enabled"`
+	Tag           string
 }
 
 // Client - Client is the core class, starting point of any bot.
@@ -35,6 +41,7 @@ type Client struct {
 	LastAckHeartbeat   int64
 	LastSequenceNumber int
 	HeartbeatInterval  chan bool
+	SessionID          string
 }
 
 // Login is where the websocket methods always begin.
@@ -87,4 +94,13 @@ type GatewayResponse struct {
 		Remaining  int `json:"remaining"`
 		ResetAfter int `json:"reset_after"`
 	} `json:"session_start_limit"`
+}
+
+// Instantiate sets up properties after they've been received from discord.
+func (clientUser *ClientUser) Instantiate() {
+	clientUser.Tag = clientUser.Username + "#" + clientUser.Discriminator
+
+	if clientUser.System != true && clientUser.System != false {
+		clientUser.System = false
+	}
 }

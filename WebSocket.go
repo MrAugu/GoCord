@@ -77,9 +77,16 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 
 	if payload.Op == 11 {
 		client.LastAckHeartbeat = int64(time.Now().Unix())
+		fmt.Println("Heartbeat acknowledged.")
 	}
 
-	fmt.Println(payload.Event)
+	if payload.Event == "READY" {
+		var BotUser User = payload.Data.User
+		client.User = ClientUser{Avatar: BotUser.Avatar, Bot: BotUser.Bot, Discriminator: BotUser.Discriminator, ID: BotUser.ID, Locale: BotUser.Locale, System: BotUser.System, Username: BotUser.Username, MfaEnabled: BotUser.MfaEnabled}
+		client.User.Instantiate()
+
+		client.SessionID = payload.Data.SessionID
+	}
 }
 
 func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket) {
@@ -121,10 +128,21 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 type WebSocketPayload struct {
 	Op   int `json:"op"`
 	Data struct {
-		HeartbeatInterval int `json:"heartbeat_interval"`
+		HeartbeatInterval int                         `json:"heartbeat_interval"`
+		SessionID         string                      `json:"session_id"`
+		GatewayVersion    int                         `json:"v"`
+		User              User                        `json:"user"`
+		PrivateChannels   map[string]string           `json:"private_channels"`
+		Guilds            map[string]UnavailableGuild `json:"guilds"`
 	} `json:"d"`
 	SequenceNumber int    `json:"s"`
 	Event          string `json:"t"`
+}
+
+// UnavailableGuild holds data of an unavailable guild.
+type UnavailableGuild struct {
+	ID          string `json:"id"`
+	Unavailable bool   `json:"unavailable"`
 }
 
 // HeartbeatPacket helps with serialization of the heartbeat packet.

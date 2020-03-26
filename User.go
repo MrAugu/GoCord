@@ -2,13 +2,24 @@ package gocord
 
 // User - Holds an user's data.
 type User struct {
-	Client        *Client
-	Avatar        string
-	Bot           bool
-	Discriminator string
-	ID            string
-	Locale        string
-	System        bool
+	Avatar        string `json:"avatar"`
+	Bot           bool   `json:"bot"`
+	Discriminator string `json:"discriminator"`
+	ID            string `json:"id"`
+	Locale        string `json:"locale"`
+	System        bool   `json:"system"`
+	Username      string `json:"username"`
+	MfaEnabled    bool   `json:"mfa_enabled"`
 	Tag           string
-	Username      string
+	Client        *Client
+}
+
+// Instantiate instantiates an User structure.
+func (user *User) Instantiate(client *Client) {
+	user.Tag = user.Username + "#" + user.Discriminator
+	user.Client = client
+
+	if user.System != true && user.System != false {
+		user.System = false
+	}
 }
