@@ -56,34 +56,30 @@ func disconnected(err error, socket gowebsocket.Socket, client *Client) {
 func event(message string, socket gowebsocket.Socket, client *Client) {
 	var payload WebSocketPayload
 	json.Unmarshal([]byte(message), &payload)
-        if payload.SequenceNumber != 0 {
-          client.LastSequenceNumber = payload.SequenceNumber
-        }
+
+	if payload.SequenceNumber != 0 {
+		client.LastSequenceNumber = payload.SequenceNumber
+	}
 
 	if payload.Op == 10 {
 		initializeHeartbeat(payload.Data.HeartbeatInterval, client, socket)
 		if client.Ready != true {
 			var payload string
-			var rawPayload identifyPacket = identifyPacket{Token: client.Token, Properties: identifyProps{Browser: "gocord", Os: "windows", Device: "gocord"}, Compress: false, LargeThreshold: 250, Presence: identifyPresence{Afk: false, Status: "online"}}
+			var rawPayload identifyGatewayPacket = identifyGatewayPacket{Op: 2, Event: "IDENTIFY", Data: identifyPacket{Token: client.Token, Properties: identifyProps{Browser: "gocord", Os: "windows", Device: "gocord"}, Compress: false, LargeThreshold: 250, Presence: identifyPresence{Afk: false, Status: "online"}}}
 			rawIdentifyPayload, _ := json.Marshal(rawPayload)
 			payload = string(rawIdentifyPayload)
-			fmt.Println(payload)
+			if client.Debug == true {
+				fmt.Println("Sending the IDENTIFY payload.")
+			}
+			socket.SendText(payload)
 		}
 	}
 
 	if payload.Op == 11 {
 		client.LastAckHeartbeat = int64(time.Now().Unix())
 	}
-}
 
-// WebSocketPayload helps deserialize json websocket events.
-type WebSocketPayload struct {
-	Op   int `json:"op"`
-	Data struct {
-		HeartbeatInterval int `json:"heartbeat_interval"`
-	} `json:"d"`
-	SequenceNumber int `json:"s"`
-	EventName      int `json:"t"`
+	fmt.Println(payload.Event)
 }
 
 func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket) {
@@ -121,10 +117,26 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 	}, interval+10000, true)
 }
 
+// WebSocketPayload helps deserialize json websocket events.
+type WebSocketPayload struct {
+	Op   int `json:"op"`
+	Data struct {
+		HeartbeatInterval int `json:"heartbeat_interval"`
+	} `json:"d"`
+	SequenceNumber int    `json:"s"`
+	Event          string `json:"t"`
+}
+
 // HeartbeatPacket helps with serialization of the heartbeat packet.
 type HeartbeatPacket struct {
 	Op  int `json:"op"`
 	Seq int `json:"d"`
+}
+
+type identifyGatewayPacket struct {
+	Op    int            `json:"op"`
+	Event string         `json:"t"`
+	Data  identifyPacket `json:"d"`
 }
 
 type identifyPacket struct {

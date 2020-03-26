@@ -64,6 +64,10 @@ func (client *Client) Login(Token string) {
 	var Response GatewayResponse
 	json.Unmarshal([]byte(string(body)), &Response)
 
+	if len(Response.URL) < 5 {
+		panic("Invalid token provided.")
+	}
+
 	if client.Debug == true {
 		fmt.Println("URL:", Response.URL)
 		fmt.Println("Shards:", Response.Shards)
