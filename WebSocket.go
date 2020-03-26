@@ -97,10 +97,44 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 		if client.Debug != nil {
 			client.Debug("Received session data, waiting to receive guilds...")
 		}
+
+		if len(client.InitialGuilds) < 1 {
+			if client.Debug != nil {
+				client.Debug("Client has no guilds to receive. Marking it as ready.")
+			}
+			client.Ready = true
+			if client.OnReady != nil {
+				client.OnReady()
+			}
+		}
 	}
 
 	if payload.Event == "GUILD_CREATE" && client.Ready != true {
-		fmt.Println(payload.Data.Name)
+		g := payload.Data
+		var createdGuild Guild = Guild{ID: g.ID, Name: g.Name, Icon: g.Icon, Splash: g.Splash, DiscoverySplash: g.DiscoverySplash, OwnerID: g.OwnerID, Permissions: g.Permissions, Region: g.Region, AfkChannelID: g.AfkChannelID, AfkTimeout: g.AfkTimeout, EmbedEnabled: g.EmbedEnabled, EmbedChannelID: g.EmbedChannelID, VerificationLevel: g.VerificationLevel, DefaultMessageNotifications: g.DefaultMessageNotifications, ExplicitContentFilter: g.ExplicitContentFilter, Features: g.Features, MfaLevel: g.MfaLevel, ApplicationID: g.ApplicationID, WidgetEnabled: g.WidgetEnabled, WidgetChannelID: g.WidgetChannelID, SystemChannelID: g.SystemChannelID, SystemChannelFlags: g.SystemChannelFlags, RulesChannelID: g.RulesChannelID, VoiceStates: g.VoiceStates, Large: g.Large, Unavailable: g.Unavailable, MemberCount: g.MemberCount, MaxPresences: g.MaxPresences, MaxMembers: g.MaxMembers, VanityCode: g.VanityCode, Description: g.Description, Banner: g.Banner, PremiumTier: g.PremiumTier, PremiumSubscriptionCount: g.PremiumSubscriptionCount, PreferredLocale: g.PreferredLocale, PublicUpdatesChannelID: g.PublicUpdatesChannelID}
+		guildRoles := make(map[string]Role)
+		for _, key := range payload.Data.Roles {
+			properRole := Role{ID: key.ID, Name: key.Name, Color: key.Color, Hoist: key.Hoist, Position: key.Position, Permissions: key.Permissions, Managed: key.Managed, Mentionable: key.Mentionable}
+			properRole.Instantiate(client)
+			guildRoles[key.ID] = properRole
+		}
+		createdGuild.Roles = guildRoles
+
+		guildMembers := make(map[string]GuildMember)
+		for _, key := range payload.Data.Members {
+			user := User{Avatar: key.User.Avatar, Bot: key.User.Bot, Discriminator: key.User.Discriminator, ID: key.User.ID, Locale: key.User.Locale, System: key.User.System, Username: key.User.Username, MfaEnabled: key.User.MfaEnabled}
+			user.Instantiate(client)
+			client.Users[user.ID] = user
+
+			properMember := GuildMember{User: client.Users[user.ID], Nickname: key.Nickname, Deaf: key.Deaf, Muted: key.Muted}
+			properMember.Roles = make(map[string]Role)
+			for _, roleKey := range key.Roles {
+				properMember.Roles[roleKey] = createdGuild.Roles[roleKey]
+			}
+			guildMembers[user.ID] = properMember
+		}
+		createdGuild.Members = guildMembers
+		fmt.Println(guildMembers["367302593753645057"].User.Tag)
 	}
 }
 
@@ -193,11 +227,21 @@ type WebSocketPayload struct {
 		RulesChannelID     string       `json:"rules_channel_id"`
 		VoiceStates        []VoiceState `json:"voice_states"`
 		Members            []struct {
-			User     User            `json:"user"`
-			Nickname string          `json:"nick"`
-			Roles    map[string]Role `json:"roles"`
-			Deaf     bool            `json:"deaf"`
-			Muted    bool            `json:"mute"`
+			User struct {
+				Avatar        string `json:"avatar"`
+				Bot           bool   `json:"bot"`
+				Discriminator string `json:"discriminator"`
+				ID            string `json:"id"`
+				Locale        string `json:"locale"`
+				System        bool   `json:"system"`
+				Username      string `json:"username"`
+				MfaEnabled    bool   `json:"mfa_enabled"`
+				Tag           string
+			} `json:"user"`
+			Nickname string   `json:"nick"`
+			Roles    []string `json:"roles"`
+			Deaf     bool     `json:"deaf"`
+			Muted    bool     `json:"mute"`
 		} `json:"members"`
 		Large                    bool   `json:"large"`
 		Unavailable              bool   `json:"unavailable"`

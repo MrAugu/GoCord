@@ -10,4 +10,10 @@ type Role struct {
 	Permissions int    `json:"permissions"`
 	Managed     bool   `json:"managed"`
 	Mentionable bool   `json:"mentionable"`
+	Client      *Client
+}
+
+// Instantiate instantiates a Role structure.
+func (role *Role) Instantiate(client *Client) {
+	role.Client = client
 }

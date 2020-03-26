@@ -41,6 +41,12 @@ type Guild struct {
 	PremiumSubscriptionCount    int                    `json:"premium_subscription_count"`
 	PreferredLocale             string                 `json:"preferred_locale"`
 	PublicUpdatesChannelID      string                 `json:"public_updates_channel_id"`
+	Client                      *Client
+}
+
+// Instantiate instantiates a Guild structure.
+func (guild *Guild) Instantiate(client *Client) {
+	guild.Client = client
 }
 
 // 20 Roles - Done
