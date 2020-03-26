@@ -34,6 +34,7 @@ func StartConnection(Response GatewayResponse, client *Client) {
 }
 
 func connected(socket gowebsocket.Socket, client *Client) {
+	client.Connected = true
 	if client.Debug == true {
 		fmt.Println("Websocket connection established.")
 	}
@@ -58,6 +59,13 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 
 	if payload.Op == 10 {
 		initializeHeartbeat(payload.Data.HeartbeatInterval, client, socket)
+		if client.Ready != true {
+			var payload string
+			var rawPayload identifyPacket = identifyPacket{Token: client.Token, Properties: identifyProps{Browser: "gocord", Os: "windows", Device: "gocord"}, Compress: false, LargeThreshold: 250, Presence: identifyPresence{Afk: false, Status: "online"}}
+			rawIdentifyPayload, _ := json.Marshal(rawPayload)
+			payload = string(rawIdentifyPayload)
+			fmt.Println(payload)
+		}
 	}
 
 	if payload.Op == 11 {
@@ -114,4 +122,23 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 type HeartbeatPacket struct {
 	Op  int `json:"op"`
 	Seq int `json:"d"`
+}
+
+type identifyPacket struct {
+	Token          string           `json:"token"`
+	Properties     identifyProps    `json:"properties"`
+	Compress       bool             `json:"compress"`
+	LargeThreshold int              `json:"large_threshold"`
+	Presence       identifyPresence `json:"presence"`
+}
+
+type identifyProps struct {
+	Os      string `json:"$os"`
+	Browser string `json:"$browser"`
+	Device  string `json:"$device"`
+}
+
+type identifyPresence struct {
+	Status string `json:"status"`
+	Afk    bool   `json:"afk"`
 }
