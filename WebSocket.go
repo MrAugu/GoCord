@@ -56,6 +56,9 @@ func disconnected(err error, socket gowebsocket.Socket, client *Client) {
 func event(message string, socket gowebsocket.Socket, client *Client) {
 	var payload WebSocketPayload
 	json.Unmarshal([]byte(message), &payload)
+        if payload.SequenceNumber != 0 {
+          client.LastSequenceNumber = payload.SequenceNumber
+        }
 
 	if payload.Op == 10 {
 		initializeHeartbeat(payload.Data.HeartbeatInterval, client, socket)
