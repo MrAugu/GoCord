@@ -89,6 +89,14 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 		client.User.Instantiate()
 
 		client.SessionID = payload.Data.SessionID
+		client.InitialGuilds = payload.Data.Guilds
+		if client.OnReady != nil {
+			client.OnReady()
+		}
+
+		if client.Debug != nil {
+			client.Debug("Received session data, waiting to receive guilds...")
+		}
 	}
 }
 
@@ -131,12 +139,12 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 type WebSocketPayload struct {
 	Op   int `json:"op"`
 	Data struct {
-		HeartbeatInterval int                         `json:"heartbeat_interval"`
-		SessionID         string                      `json:"session_id"`
-		GatewayVersion    int                         `json:"v"`
-		User              User                        `json:"user"`
-		PrivateChannels   map[string]string           `json:"private_channels"`
-		Guilds            map[string]UnavailableGuild `json:"guilds"`
+		HeartbeatInterval int                `json:"heartbeat_interval"`
+		SessionID         string             `json:"session_id"`
+		GatewayVersion    int                `json:"v"`
+		User              User               `json:"user"`
+		PrivateChannels   map[string]string  `json:"private_channels"`
+		Guilds            []UnavailableGuild `json:"guilds"`
 	} `json:"d"`
 	SequenceNumber int    `json:"s"`
 	Event          string `json:"t"`

@@ -42,7 +42,9 @@ type Client struct {
 	LastSequenceNumber int
 	HeartbeatInterval  chan bool
 	SessionID          string
+	InitialGuilds      []UnavailableGuild
 	Debug              func(data string)
+	OnReady            func()
 }
 
 // Login is where the websocket methods always begin.
