@@ -98,6 +98,10 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 			client.Debug("Received session data, waiting to receive guilds...")
 		}
 	}
+
+	if payload.Event == "GUILD_CREATE" && client.Ready != true {
+		fmt.Println(payload.Data.Name)
+	}
 }
 
 func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket) {
@@ -139,12 +143,74 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 type WebSocketPayload struct {
 	Op   int `json:"op"`
 	Data struct {
-		HeartbeatInterval int                `json:"heartbeat_interval"`
-		SessionID         string             `json:"session_id"`
-		GatewayVersion    int                `json:"v"`
-		User              User               `json:"user"`
-		PrivateChannels   map[string]string  `json:"private_channels"`
-		Guilds            []UnavailableGuild `json:"guilds"`
+		HeartbeatInterval           int                `json:"heartbeat_interval"`
+		SessionID                   string             `json:"session_id"`
+		GatewayVersion              int                `json:"v"`
+		User                        User               `json:"user"`
+		PrivateChannels             []string           `json:"private_channels"`
+		Guilds                      []UnavailableGuild `json:"guilds"`
+		ID                          string             `json:"id"`
+		Name                        string             `json:"name"`
+		Icon                        string             `json:"icon"`
+		Splash                      string             `json:"splash"`
+		DiscoverySplash             string             `json:"discovery_splash"`
+		OwnerID                     string             `json:"owner_id"`
+		Permissions                 int                `json:"permissions"`
+		Region                      string             `json:"region"`
+		AfkChannelID                string             `json:"afk_channel_id"`
+		AfkTimeout                  int                `json:"afk_timeout"`
+		EmbedEnabled                bool               `json:"embed_enabled"`
+		EmbedChannelID              string             `json:"embed_channel_id"`
+		VerificationLevel           int                `json:"verification_level"`
+		DefaultMessageNotifications int                `json:"default_message_notifications"`
+		ExplicitContentFilter       int                `json:"explicit_content_filter"`
+		Roles                       []Role             `json:"roles"`
+		Emojis                      []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+			User struct {
+				Avatar        string `json:"avatar"`
+				Bot           bool   `json:"bot"`
+				Discriminator string `json:"discriminator"`
+				ID            string `json:"id"`
+				Locale        string `json:"locale"`
+				System        bool   `json:"system"`
+				Username      string `json:"username"`
+				MfaEnabled    bool   `json:"mfa_enabled"`
+			} `json:"user"`
+			RequireColons bool `json:"require_colons"`
+			Managed       bool `json:"managed"`
+			Animated      bool `json:"animated"`
+			Available     bool `json:"available"`
+		} `json:"emojis"`
+		Features           []string     `json:"features"`
+		MfaLevel           int          `json:"mfa_level"`
+		ApplicationID      string       `json:"application_id"`
+		WidgetEnabled      bool         `json:"widget_enabled"`
+		WidgetChannelID    string       `json:"widget_channel_id"`
+		SystemChannelID    string       `json:"system_channel_id"`
+		SystemChannelFlags int          `json:"system_channel_flags"`
+		RulesChannelID     string       `json:"rules_channel_id"`
+		VoiceStates        []VoiceState `json:"voice_states"`
+		Members            []struct {
+			User     User            `json:"user"`
+			Nickname string          `json:"nick"`
+			Roles    map[string]Role `json:"roles"`
+			Deaf     bool            `json:"deaf"`
+			Muted    bool            `json:"mute"`
+		} `json:"members"`
+		Large                    bool   `json:"large"`
+		Unavailable              bool   `json:"unavailable"`
+		MemberCount              int    `json:"member_count"`
+		MaxPresences             int    `json:"max_presences"`
+		MaxMembers               int    `json:"max_members"`
+		VanityCode               string `json:"vanity_url_code"`
+		Description              string `json:"description"`
+		Banner                   string `json:"banner"`
+		PremiumTier              int    `json:"premium_tier"`
+		PremiumSubscriptionCount int    `json:"premium_subscription_count"`
+		PreferredLocale          string `json:"preferred_locale"`
+		PublicUpdatesChannelID   string `json:"public_updates_channel_id"`
 	} `json:"d"`
 	SequenceNumber int    `json:"s"`
 	Event          string `json:"t"`
