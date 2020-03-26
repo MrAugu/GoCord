@@ -3,6 +3,7 @@ package gocord
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/sacOO7/gowebsocket"
@@ -26,8 +27,8 @@ func StartConnection(Response GatewayResponse, client *Client) {
 	client.Ws.OnBinaryMessage = func(data []byte, socket gowebsocket.Socket) {
 		fmt.Println("Unexpectedly recieved binary data ", data)
 	}
-	if client.Debug == true {
-		fmt.Println("Connecting to the gateway...")
+	if client.Debug != nil {
+		client.Debug("Connecting to the gateway...")
 	}
 
 	client.Ws.Connect()
@@ -35,21 +36,21 @@ func StartConnection(Response GatewayResponse, client *Client) {
 
 func connected(socket gowebsocket.Socket, client *Client) {
 	client.Connected = true
-	if client.Debug == true {
-		fmt.Println("Websocket connection established.")
+	if client.Debug != nil {
+		client.Debug("Websocket connection established.")
 	}
 }
 
 func connectionError(err error, socket gowebsocket.Socket, client *Client) {
-	if client.Debug == true {
-		fmt.Println("Websocket connection error: " + err.Error())
+	if client.Debug != nil {
+		client.Debug("Websocket connection error: " + err.Error())
 	}
 }
 
 func disconnected(err error, socket gowebsocket.Socket, client *Client) {
 	// Much more logic needed to this.
-	if client.Debug == true {
-		fmt.Println("Disconnected from the socket.")
+	if client.Debug != nil {
+		client.Debug("Disconnected from the socket.")
 	}
 }
 
@@ -68,8 +69,8 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 			var rawPayload identifyGatewayPacket = identifyGatewayPacket{Op: 2, Event: "IDENTIFY", Data: identifyPacket{Token: client.Token, Properties: identifyProps{Browser: "gocord", Os: "windows", Device: "gocord"}, Compress: false, LargeThreshold: 250, Presence: identifyPresence{Afk: false, Status: "online"}}}
 			rawIdentifyPayload, _ := json.Marshal(rawPayload)
 			payload = string(rawIdentifyPayload)
-			if client.Debug == true {
-				fmt.Println("Sending the IDENTIFY payload.")
+			if client.Debug != nil {
+				client.Debug("Sending the IDENTIFY payload.")
 			}
 			socket.SendText(payload)
 		}
@@ -77,7 +78,9 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 
 	if payload.Op == 11 {
 		client.LastAckHeartbeat = int64(time.Now().Unix())
-		fmt.Println("Heartbeat acknowledged.")
+		if client.Debug != nil {
+			client.Debug("Heartbeat acknowledged.")
+		}
 	}
 
 	if payload.Event == "READY" {
@@ -90,8 +93,8 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 }
 
 func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket) {
-	if client.Debug == true {
-		fmt.Println("Setting heartbeat interval at", interval, "ms.")
+	if client.Debug != nil {
+		client.Debug("Setting heartbeat interval at " + strconv.Itoa(interval) + "ms.")
 	}
 
 	var channel chan bool = SetInterval(func() {
@@ -102,8 +105,8 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 			fmt.Println(err)
 		}
 		payload = string(rawPayload)
-		if client.Debug == true {
-			fmt.Println("Sending a heartbeat.")
+		if client.Debug != nil {
+			client.Debug("Sending a heartbeat.")
 		}
 		socket.SendText(payload)
 		client.LastHeartbeatSent = int64(time.Now().Unix())
@@ -114,14 +117,14 @@ func initializeHeartbeat(interval int, client *Client, socket gowebsocket.Socket
 	var intervalChan chan bool
 	intervalChan = SetInterval(func() {
 		if client.LastHeartbeatSent-client.LastAckHeartbeat > 5000 {
-			if client.Debug == true {
-				fmt.Println("Last heartbeat acknowledged was over 5 seconds ago. Closing...")
+			if client.Debug != nil {
+				client.Debug("Last heartbeat acknowledged was over 5 seconds ago. Closing...")
 			}
 			socket.Close()
 			close(client.HeartbeatInterval)
 			close(intervalChan)
 		}
-	}, interval+10000, true)
+	}, 5000, true)
 }
 
 // WebSocketPayload helps deserialize json websocket events.

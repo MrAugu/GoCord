@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/sacOO7/gowebsocket"
 )
@@ -36,12 +37,12 @@ type Client struct {
 	Token              string
 	Ready              bool
 	Connected          bool
-	Debug              bool
 	LastHeartbeatSent  int64
 	LastAckHeartbeat   int64
 	LastSequenceNumber int
 	HeartbeatInterval  chan bool
 	SessionID          string
+	Debug              func(data string)
 }
 
 // Login is where the websocket methods always begin.
@@ -52,8 +53,8 @@ func (client *Client) Login(Token string) {
 		fmt.Println("Request Error on '/gateway/bot': " + requestError.Error())
 	}
 
-	if client.Debug == true {
-		fmt.Println("Sending request to /gateway/bot to grab initialization data.")
+	if client.Debug != nil {
+		client.Debug("Sending request to /gateway/bot to grab initialization data.")
 	}
 
 	request.Header.Add("Authorization", "Bot "+client.Token)
@@ -75,11 +76,11 @@ func (client *Client) Login(Token string) {
 		panic("Invalid token provided.")
 	}
 
-	if client.Debug == true {
-		fmt.Println("URL:", Response.URL)
-		fmt.Println("Shards:", Response.Shards)
-		fmt.Println("Remaining Session Limit:", Response.SessionLimit.Remaining)
-		fmt.Println("Preparing to connect to the gateway...")
+	if client.Debug != nil {
+		client.Debug("URL:" + Response.URL)
+		client.Debug("Shards: " + strconv.Itoa(Response.Shards))
+		client.Debug("Remaining Session Limit: " + strconv.Itoa(Response.SessionLimit.Remaining))
+		client.Debug("Preparing to connect to the gateway...")
 	}
 
 	StartConnection(Response, client)
@@ -87,8 +88,8 @@ func (client *Client) Login(Token string) {
 
 // GatewayResponse holds the /gateway/bot response data.
 type GatewayResponse struct {
-	URL          string  `json:"url"`
-	Shards       float64 `json:"shards"`
+	URL          string `json:"url"`
+	Shards       int    `json:"shards"`
 	SessionLimit struct {
 		Total      int `json:"total"`
 		Remaining  int `json:"remaining"`

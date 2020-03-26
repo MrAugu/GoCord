@@ -1,6 +1,9 @@
 package gocord
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 // SpawnClient returns a freshly initialized empty client.
 func SpawnClient(debug bool) Client {
@@ -14,7 +17,9 @@ func SpawnClient(debug bool) Client {
 	initializedClient.URL = urlMap
 	initializedClient.Ready = false
 	initializedClient.Connected = false
-	initializedClient.Debug = debug
+	initializedClient.Debug = func(text string) {
+		fmt.Println(text)
+	}
 
 	return initializedClient
 }
