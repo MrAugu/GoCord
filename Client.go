@@ -31,7 +31,7 @@ type Client struct {
 	Ws                 gowebsocket.Socket
 	Users              map[string]User
 	Guilds             map[string]Guild
-	Channels           map[string]GuildChannel
+	Channels           map[string]Channel
 	URL                map[string]string
 	APIVersion         string
 	Token              string

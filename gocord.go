@@ -20,7 +20,7 @@ func SpawnClient(debug func(text string)) Client {
 
 	userMap := make(map[string]User)
 	guildMap := make(map[string]Guild)
-	channelMap := make(map[string]GuildChannel)
+	channelMap := make(map[string]Channel)
 
 	initializedClient.Users = userMap
 	initializedClient.Guilds = guildMap

@@ -9,4 +9,10 @@ type Emoji struct {
 	Managed       bool   `json:"managed"`
 	Animated      bool   `json:"animated"`
 	Available     bool   `json:"available"`
+	Client        *Client
+}
+
+// Instantiate instantiates an Emoji structure.
+func (emoji *Emoji) Instantiate(client *Client) {
+	emoji.Client = client
 }

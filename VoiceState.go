@@ -12,6 +12,10 @@ type VoiceState struct {
 	SelfMute   bool   `json:"self_mute"`
 	SelfStream bool   `json:"self_stream"`
 	Suppress   bool   `json:"suppress"`
+	Client     *Client
 }
 
-// 8 Member
+// Instantiate instantiates a VoiceState interface.
+func (state *VoiceState) Instantiate(client *Client) {
+	state.Client = client
+}

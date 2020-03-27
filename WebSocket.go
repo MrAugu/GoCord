@@ -111,7 +111,7 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 
 	if payload.Event == "GUILD_CREATE" && client.Ready != true {
 		g := payload.Data
-		var createdGuild Guild = Guild{ID: g.ID, Name: g.Name, Icon: g.Icon, Splash: g.Splash, DiscoverySplash: g.DiscoverySplash, OwnerID: g.OwnerID, Permissions: g.Permissions, Region: g.Region, AfkChannelID: g.AfkChannelID, AfkTimeout: g.AfkTimeout, EmbedEnabled: g.EmbedEnabled, EmbedChannelID: g.EmbedChannelID, VerificationLevel: g.VerificationLevel, DefaultMessageNotifications: g.DefaultMessageNotifications, ExplicitContentFilter: g.ExplicitContentFilter, Features: g.Features, MfaLevel: g.MfaLevel, ApplicationID: g.ApplicationID, WidgetEnabled: g.WidgetEnabled, WidgetChannelID: g.WidgetChannelID, SystemChannelID: g.SystemChannelID, SystemChannelFlags: g.SystemChannelFlags, RulesChannelID: g.RulesChannelID, VoiceStates: g.VoiceStates, Large: g.Large, Unavailable: g.Unavailable, MemberCount: g.MemberCount, MaxPresences: g.MaxPresences, MaxMembers: g.MaxMembers, VanityCode: g.VanityCode, Description: g.Description, Banner: g.Banner, PremiumTier: g.PremiumTier, PremiumSubscriptionCount: g.PremiumSubscriptionCount, PreferredLocale: g.PreferredLocale, PublicUpdatesChannelID: g.PublicUpdatesChannelID}
+		var createdGuild Guild = Guild{ID: g.ID, Name: g.Name, Icon: g.Icon, Splash: g.Splash, DiscoverySplash: g.DiscoverySplash, OwnerID: g.OwnerID, Permissions: g.Permissions, Region: g.Region, AfkChannelID: g.AfkChannelID, AfkTimeout: g.AfkTimeout, EmbedEnabled: g.EmbedEnabled, EmbedChannelID: g.EmbedChannelID, VerificationLevel: g.VerificationLevel, DefaultMessageNotifications: g.DefaultMessageNotifications, ExplicitContentFilter: g.ExplicitContentFilter, Features: g.Features, MfaLevel: g.MfaLevel, ApplicationID: g.ApplicationID, WidgetEnabled: g.WidgetEnabled, WidgetChannelID: g.WidgetChannelID, SystemChannelID: g.SystemChannelID, SystemChannelFlags: g.SystemChannelFlags, RulesChannelID: g.RulesChannelID, Large: g.Large, Unavailable: g.Unavailable, MemberCount: g.MemberCount, MaxPresences: g.MaxPresences, MaxMembers: g.MaxMembers, VanityCode: g.VanityCode, Description: g.Description, Banner: g.Banner, PremiumTier: g.PremiumTier, PremiumSubscriptionCount: g.PremiumSubscriptionCount, PreferredLocale: g.PreferredLocale, PublicUpdatesChannelID: g.PublicUpdatesChannelID}
 		guildRoles := make(map[string]Role)
 		for _, key := range payload.Data.Roles {
 			properRole := Role{ID: key.ID, Name: key.Name, Color: key.Color, Hoist: key.Hoist, Position: key.Position, Permissions: key.Permissions, Managed: key.Managed, Mentionable: key.Mentionable}
@@ -134,7 +134,22 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 			guildMembers[user.ID] = properMember
 		}
 		createdGuild.Members = guildMembers
-		fmt.Println(guildMembers["367302593753645057"].User.Tag)
+
+		guildEmojis := make(map[string]Emoji)
+		for _, key := range payload.Data.Emojis {
+			properEmoji := Emoji{ID: key.ID, Name: key.Name, User: client.Users[key.User.ID], RequireColons: key.RequireColons}
+			properEmoji.Instantiate(client)
+			guildEmojis[key.ID] = properEmoji
+		}
+		createdGuild.Emojis = guildEmojis
+
+		guildVoiceStates := make(map[string]VoiceState)
+		for _, key := range payload.Data.VoiceStates {
+			properVoiceState := VoiceState{GuildID: key.GuildID, ChannelID: key.ChannelID, UserID: key.UserID, SessionID: key.SessionID, Deaf: key.Deaf, Mute: key.Mute, SelfDeaf: key.SelfDeaf, SelfMute: key.SelfMute, SelfStream: key.SelfStream, Suppress: key.Suppress}
+			properVoiceState.Instantiate(client)
+			guildVoiceStates[key.UserID] = properVoiceState
+		}
+		createdGuild.VoiceStates = guildVoiceStates
 	}
 }
 
@@ -217,16 +232,55 @@ type WebSocketPayload struct {
 			Animated      bool `json:"animated"`
 			Available     bool `json:"available"`
 		} `json:"emojis"`
-		Features           []string     `json:"features"`
-		MfaLevel           int          `json:"mfa_level"`
-		ApplicationID      string       `json:"application_id"`
-		WidgetEnabled      bool         `json:"widget_enabled"`
-		WidgetChannelID    string       `json:"widget_channel_id"`
-		SystemChannelID    string       `json:"system_channel_id"`
-		SystemChannelFlags int          `json:"system_channel_flags"`
-		RulesChannelID     string       `json:"rules_channel_id"`
-		VoiceStates        []VoiceState `json:"voice_states"`
-		Members            []struct {
+		Channels []struct {
+			ID            string `json:"id"`
+			Type          int    `json:"type"`
+			GuildID       string `json:"guild_id"`
+			Position      int    `json:"position"`
+			Name          string `json:"name"`
+			Topic         string `json:"topic"`
+			Nsfw          bool   `json:"nsfw"`
+			LastMessageID string `json:"last_message_id"`
+			Bitrate       int    `json:"bitrate"`
+			UserLimit     int    `json:"user_limit"`
+			Cooldown      int    `json:"rate_limit_per_user"`
+			Recipients    []struct {
+				Avatar        string `json:"avatar"`
+				Bot           bool   `json:"bot"`
+				Discriminator string `json:"discriminator"`
+				ID            string `json:"id"`
+				Locale        string `json:"locale"`
+				System        bool   `json:"system"`
+				Username      string `json:"username"`
+				MfaEnabled    bool   `json:"mfa_enabled"`
+				Tag           string
+			} `json:"recipients"`
+			Icon          string `json:"icon"`
+			OwnerID       string `json:"owner_id"`
+			ApplicationID string `json:"application_id"`
+			ParentID      string `json:"parent_id"`
+		}
+		Features           []string `json:"features"`
+		MfaLevel           int      `json:"mfa_level"`
+		ApplicationID      string   `json:"application_id"`
+		WidgetEnabled      bool     `json:"widget_enabled"`
+		WidgetChannelID    string   `json:"widget_channel_id"`
+		SystemChannelID    string   `json:"system_channel_id"`
+		SystemChannelFlags int      `json:"system_channel_flags"`
+		RulesChannelID     string   `json:"rules_channel_id"`
+		VoiceStates        []struct {
+			GuildID    string `json:"guild_id"`
+			ChannelID  string `json:"channel_id"`
+			UserID     string `json:"user_id"`
+			SessionID  string `json:"session_id"`
+			Deaf       bool   `json:"deaf"`
+			Mute       bool   `json:"mute"`
+			SelfDeaf   bool   `json:"self_deaf"`
+			SelfMute   bool   `json:"self_mute"`
+			SelfStream bool   `json:"self_stream"`
+			Suppress   bool   `json:"suppress"`
+		} `json:"voice_states"`
+		Members []struct {
 			User struct {
 				Avatar        string `json:"avatar"`
 				Bot           bool   `json:"bot"`
