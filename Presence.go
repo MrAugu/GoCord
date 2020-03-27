@@ -47,5 +47,4 @@ type PresenceGame struct {
 type Presence struct {
 	Status string
 	Game   PresenceGame
-	User   User
 }

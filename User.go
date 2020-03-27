@@ -12,6 +12,7 @@ type User struct {
 	MfaEnabled    bool   `json:"mfa_enabled"`
 	Tag           string
 	Client        *Client
+	Presence      Presence
 }
 
 // Instantiate instantiates an User structure.

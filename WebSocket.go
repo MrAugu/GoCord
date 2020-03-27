@@ -90,9 +90,6 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 
 		client.SessionID = payload.Data.SessionID
 		client.InitialGuilds = payload.Data.Guilds
-		if client.OnReady != nil {
-			client.OnReady()
-		}
 
 		if client.Debug != nil {
 			client.Debug("Received session data, waiting to receive guilds...")
@@ -123,9 +120,9 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 		guildMembers := make(map[string]GuildMember)
 		for _, key := range payload.Data.Members {
 			user := User{Avatar: key.User.Avatar, Bot: key.User.Bot, Discriminator: key.User.Discriminator, ID: key.User.ID, Locale: key.User.Locale, System: key.User.System, Username: key.User.Username, MfaEnabled: key.User.MfaEnabled}
+			user.Presence = Presence{Status: "offline", Game: PresenceGame{}}
 			user.Instantiate(client)
 			client.Users[user.ID] = user
-
 			properMember := GuildMember{User: client.Users[user.ID], Nickname: key.Nickname, Deaf: key.Deaf, Muted: key.Muted}
 			properMember.Roles = make(map[string]Role)
 			for _, roleKey := range key.Roles {
@@ -159,7 +156,7 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 					properOverwrite.User = client.Users[overwrite.ID]
 				}
 
-				channelPerms[len(channelPerms)] = properOverwrite
+				channelPerms = append(channelPerms, properOverwrite)
 			}
 
 			properChannel.PermissionOverwrites = channelPerms
@@ -178,6 +175,23 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 			guildVoiceStates[key.UserID] = properVoiceState
 		}
 		createdGuild.VoiceStates = guildVoiceStates
+
+		for _, key := range payload.Data.Presences {
+			var usr User = client.Users[key.User.ID]
+			usr.Presence = Presence{Status: key.Status, Game: key.Game}
+			client.Users[usr.ID] = usr
+		}
+
+		client.Guilds[createdGuild.ID] = createdGuild
+		if len(client.InitialGuilds) == len(client.Guilds) {
+			if client.Debug != nil {
+				client.Debug("Client received all of its guilds. Marking it as ready.")
+			}
+			client.Ready = true
+			if client.OnReady != nil {
+				client.OnReady()
+			}
+		}
 	}
 }
 
@@ -314,7 +328,7 @@ type WebSocketPayload struct {
 			SelfStream bool   `json:"self_stream"`
 			Suppress   bool   `json:"suppress"`
 		} `json:"voice_states"`
-		Presences RawPresence `json:"presences"`
+		Presences []RawPresence `json:"presences"`
 		Members   []struct {
 			User struct {
 				Avatar        string `json:"avatar"`
