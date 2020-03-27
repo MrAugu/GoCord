@@ -29,6 +29,7 @@ type Guild struct {
 	RulesChannelID              string                 `json:"rules_channel_id"`
 	VoiceStates                 map[string]VoiceState  `json:"voice_states"`
 	Members                     map[string]GuildMember `json:"members"`
+	Channels                    map[string]Channel     `json:"this_tag_has_no_real_purpose"`
 	Large                       bool                   `json:"large"`
 	Unavailable                 bool                   `json:"unavailable"`
 	MemberCount                 int                    `json:"member_count"`

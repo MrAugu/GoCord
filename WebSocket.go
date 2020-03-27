@@ -143,9 +143,37 @@ func event(message string, socket gowebsocket.Socket, client *Client) {
 		}
 		createdGuild.Emojis = guildEmojis
 
+		guildChannels := make(map[string]Channel)
+		for _, key := range payload.Data.Channels {
+			properChannel := Channel{ID: key.ID, GuildID: key.GuildID, Position: key.Position, Name: key.Name, Topic: key.Topic, Nsfw: key.Nsfw, LastMessageID: key.LastMessageID, Bitrate: key.Bitrate, UserLimit: key.UserLimit, Cooldown: key.Cooldown, Icon: key.Icon, OwnerID: key.OwnerID, ApplicationID: key.ApplicationID, ParentID: key.ParentID}
+
+			channelPerms := make([]PermissionOverwrite, 0, len(key.PermissionOverwrites))
+			for _, overwrite := range key.PermissionOverwrites {
+				properOverwrite := PermissionOverwrite{ID: overwrite.ID, Type: overwrite.Type}
+				properOverwrite.Allow = CalculateBitfield(overwrite.Allow)
+				properOverwrite.Deny = CalculateBitfield(overwrite.Deny)
+
+				if properOverwrite.Type == "role" {
+					properOverwrite.Role = createdGuild.Roles[overwrite.ID]
+				} else {
+					properOverwrite.User = client.Users[overwrite.ID]
+				}
+
+				channelPerms[len(channelPerms)] = properOverwrite
+			}
+
+			properChannel.PermissionOverwrites = channelPerms
+			guildChannels[properChannel.ID] = properChannel
+			client.Channels[properChannel.ID] = properChannel
+		}
+
+		createdGuild.Channels = guildChannels
+
 		guildVoiceStates := make(map[string]VoiceState)
 		for _, key := range payload.Data.VoiceStates {
 			properVoiceState := VoiceState{GuildID: key.GuildID, ChannelID: key.ChannelID, UserID: key.UserID, SessionID: key.SessionID, Deaf: key.Deaf, Mute: key.Mute, SelfDeaf: key.SelfDeaf, SelfMute: key.SelfMute, SelfStream: key.SelfStream, Suppress: key.Suppress}
+			properVoiceState.User = client.Users[key.UserID]
+
 			properVoiceState.Instantiate(client)
 			guildVoiceStates[key.UserID] = properVoiceState
 		}
@@ -233,18 +261,24 @@ type WebSocketPayload struct {
 			Available     bool `json:"available"`
 		} `json:"emojis"`
 		Channels []struct {
-			ID            string `json:"id"`
-			Type          int    `json:"type"`
-			GuildID       string `json:"guild_id"`
-			Position      int    `json:"position"`
-			Name          string `json:"name"`
-			Topic         string `json:"topic"`
-			Nsfw          bool   `json:"nsfw"`
-			LastMessageID string `json:"last_message_id"`
-			Bitrate       int    `json:"bitrate"`
-			UserLimit     int    `json:"user_limit"`
-			Cooldown      int    `json:"rate_limit_per_user"`
-			Recipients    []struct {
+			ID                   string `json:"id"`
+			Type                 int    `json:"type"`
+			GuildID              string `json:"guild_id"`
+			Position             int    `json:"position"`
+			Name                 string `json:"name"`
+			Topic                string `json:"topic"`
+			Nsfw                 bool   `json:"nsfw"`
+			LastMessageID        string `json:"last_message_id"`
+			Bitrate              int    `json:"bitrate"`
+			UserLimit            int    `json:"user_limit"`
+			Cooldown             int    `json:"rate_limit_per_user"`
+			PermissionOverwrites []struct {
+				ID    string `json:"id"`
+				Type  string `json:"type"`
+				Allow int    `json:"allow"`
+				Deny  int    `json:"deny"`
+			} `json:"permission_overwrites"`
+			Recipients []struct {
 				Avatar        string `json:"avatar"`
 				Bot           bool   `json:"bot"`
 				Discriminator string `json:"discriminator"`

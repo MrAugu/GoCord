@@ -13,6 +13,8 @@ type VoiceState struct {
 	SelfStream bool   `json:"self_stream"`
 	Suppress   bool   `json:"suppress"`
 	Client     *Client
+	User       User
+	Channel    Channel
 }
 
 // Instantiate instantiates a VoiceState interface.
