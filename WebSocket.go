@@ -314,7 +314,8 @@ type WebSocketPayload struct {
 			SelfStream bool   `json:"self_stream"`
 			Suppress   bool   `json:"suppress"`
 		} `json:"voice_states"`
-		Members []struct {
+		Presences RawPresence `json:"presences"`
+		Members   []struct {
 			User struct {
 				Avatar        string `json:"avatar"`
 				Bot           bool   `json:"bot"`
